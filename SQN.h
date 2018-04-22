@@ -209,6 +209,11 @@ namespace SQNpp {
             omega_bar = Vector::Zero(n);                                                //set to zero
             omega = Omega;                                                    //set to zero
             Report.StartTiming();
+            //define the variable you want to trace
+            Report.StartRecordValue("g_norm");
+            Report.StartRecordValue("fx");
+            Report.StartRecordVector("Omega");
+            Report.StartRecordVector("Nabla_F");
             for (;;)
             {
                 if (k<10) Report.StartTiming(); //++
@@ -256,8 +261,12 @@ namespace SQNpp {
                     std::cout<<"fx value : "<<fx << std::endl;
                 }
                 Scalar gnorm = (Nabla_F).norm();                                        //update new gradient norm
-                Report.RecordValue(fx);
-                Report.RecordGradient(gnorm);
+                
+            Report.AddRecordValue("g_norm",gnorm);                                      //for record
+                Report.AddRecordValue("fx",fx);
+                Report.AddRecordVector("Omega",omega);
+                Report.AddRecordVector("Nabla_F",Nabla_F);
+                
                 if (gnorm < epsilon) {                                                  //the gradient will not change
                     //do some report
                     Omega = prev_omega_bar;                                             //get the final optimal parameter Omega
@@ -268,7 +277,7 @@ namespace SQNpp {
                                                                                         //function, this is for backup plan.
             }
             Report.EndTiming("Main Loop ends"); //++
-            Report.WriteLog(k,n,t); //++
+            Report.WriteLog(k,n,t,"/Users/LiuJiazheng/Documents/Optimazation/Data/Out/"); //++
         }
         
         
