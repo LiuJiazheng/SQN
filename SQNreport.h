@@ -44,8 +44,8 @@ namespace SQNpp{
         std::vector<std::chrono::steady_clock::time_point> start;            //start counting time
         uint64_t end;              //end time
         std::map<std::string,std::chrono::duration<long, std::milli>> TimeSeries;        //different part time record
-        std::vector<Scalar> iteration_value;
-        std::vector<Scalar> iteration_gradient;
+        std::map<std::string, std::vector<Scalar>> RecordValue;
+        std::map<std::string, std::vector<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>>> RecordVector;
         int ptr;
         const SQNpp<Scalar>&   param;
         
@@ -64,13 +64,37 @@ namespace SQNpp{
             std::chrono::duration<long, std::milli> DurationTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start[ptr])  ;   //get the mi secs
             TimeSeries.insert(std::pair<std::string,std::chrono::duration<long, std::milli>> (str,DurationTime));
         }
-        void RecordValue(Scalar Value) {iteration_value.push_back(Value);}
-        void RecordGradient(Scalar GradNorm) {iteration_gradient.push_back(GradNorm);}
         
-        void WriteLog(int k,int n,int t)
+        void StartRecordValue(std::string VariableName)
+        {
+            std::vector<Scalar> v_record;
+            RecordValue.emplace(std::make_pair(VariableName,v_record));
+        }
+        
+        
+        void AddRecordValue(std::string VariableName,Scalar Value)
+        {
+            RecordValue[VariableName].push_back(Value);
+        }
+        
+        void StartRecordVector(std::string VariableName)
+        {
+            std::vector<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>> v_record;
+            RecordVector.emplace(std::make_pair(VariableName,v_record));
+        }
+        
+        void AddRecordVector(std::string VariableName, Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector)
+        {
+            RecordVector[VariableName].push_back(Vector);
+        }
+        
+        
+        
+        void WriteLog(int k,int n,int t, std::string FilePath)
         {
             //write log
-            std::ofstream LogFile ("/Users/LiuJiazheng/Documents/Optimazation/Data/Out/Log.txt");
+            FilePath = "/Users/LiuJiazheng/Documents/Optimazation/Data/Out/";
+            std::ofstream LogFile (FilePath + "Log.txt");
             if (LogFile.is_open())
             {
                 LogFile << "Memeory Limit (iteration times per updation) : "<< param.M <<"\n";
@@ -95,25 +119,31 @@ namespace SQNpp{
             }
             
             //write value data
-            std::ofstream ValueData("/Users/LiuJiazheng/Documents/Optimazation/Data/Out/Value.txt");
-            if (ValueData.is_open())
+            for (auto it = RecordValue.begin(); it != RecordValue.end(); ++it)
             {
-                for ( typename std::vector<Scalar>::iterator it = iteration_value.begin();
-                     it != iteration_value.end();
-                     ++it)
-                    ValueData << *it <<"    ";
-                ValueData.close();
+                std::string FileName = it -> first;
+                std::ofstream Data(FilePath + FileName + ".txt");
+                if (Data.is_open())
+                {
+                    auto vector = it ->second;
+                    for (auto itr = vector.begin(); itr != vector.end();++itr)
+                        Data<< *itr << "\n";
+                    Data.close();
+                }
             }
             
-            //write gradient data
-            std::ofstream GradData("/Users/LiuJiazheng/Documents/Optimazation/Data/Out/Grad.txt");
-            if (ValueData.is_open())
+            //write vector data
+            for (auto it = RecordVector.begin(); it != RecordVector.end(); ++it)
             {
-                for ( typename std::vector<Scalar>::iterator it = iteration_gradient.begin();
-                     it != iteration_gradient.end();
-                     ++it)
-                    GradData << *it <<"    ";
-                GradData.close();
+                std::string FileName = it -> first;
+                std::ofstream Data(FilePath + FileName + ".txt");
+                if (Data.is_open())
+                {
+                    auto vector = it ->second;
+                    for (auto itr = vector.begin(); itr != vector.end();++itr)
+                        Data<< (*itr).transpose() << "\n";
+                    Data.close();
+                }
             }
 
         }
