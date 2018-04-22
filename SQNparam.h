@@ -12,6 +12,21 @@
 #include <Eigen/Core>
 #include <stdexcept>  // std::invalid_argument
 #include <vector>
+#include <sstream>
+#include <fstream>
+#include <string>
+
+inline std::vector<std::string> split(std::string str, char delimiter) {
+    std::vector<std::string> internal;
+    std::stringstream ss(str); // Turn the string into a stream.
+    std::string tok;
+    
+    while(getline(ss, tok, delimiter)) {
+        internal.push_back(tok);
+    }
+    
+    return internal;
+}
 
 namespace SQNpp {
     
@@ -102,9 +117,26 @@ namespace SQNpp {
             max_step       = Scalar(1e+20);
         }
         
-        void ReadData() const
+        void ReadData(std::string FileName) const
         {
             //some read method
+            std::string line;
+            std::ifstream myfile (FileName);
+            if (myfile.is_open())
+            {
+                while ( std::getline (myfile,line) )
+                {
+                    std::vector<std::string> templine = split(line,' ');
+                    output_data.push_back(Scalar(std::stod(*templine.begin())));
+                    std::vector<Scalar> tempIn;
+                    for (auto it = templine.begin() + 1 ; it != templine.end(); ++it)
+                        tempIn.push_back(Scalar(std::stod(*it)));
+                    input_data.push_back(tempIn);
+                }
+                myfile.close();
+            }
+            else
+                throw std::invalid_argument(" Input data does not exist!");
             N = output_data.size();
         }
         
