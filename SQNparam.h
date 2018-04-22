@@ -112,8 +112,8 @@ namespace SQNpp {
             M              = 10;
             L              = 100;
             alpha          = Scalar(1);
-            b              = 50;
-            b_H            = 300;
+            b              = 3;    //50
+            b_H            = 5;    //300
             m              = 6;
             epsilon        = Scalar(1e-5);
             max_iterations = 0;
@@ -131,10 +131,10 @@ namespace SQNpp {
                 while ( std::getline (myfile,line) )
                 {
                     std::vector<std::string> templine = split(line,delimiter);
-                    output_data.push_back(Scalar(std::stod(*templine.begin())));
-                    std::vector<Scalar> tempIn;
+                    output_data.push_back(double(std::stod(*templine.begin())));
+                    std::vector<double> tempIn;
                     for (auto it = templine.begin() + 1 ; it != templine.end(); ++it)
-                        tempIn.push_back(Scalar(std::stod(*it)));
+                        tempIn.push_back(double(std::stod(*it)));
                     input_data.push_back(tempIn);
                 }
                 myfile.close();

@@ -13,15 +13,17 @@
 #include "SQNparam.h"
 #include <random>
 #include "SQNreport.h"
+#include <stdlib.h>     /* srand, rand */
+#include <iostream>
+
 namespace SQNpp {
     template <typename Scalar>
     class SQNsolver{
     private:
         typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
         typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> Matrix;
-        typedef Eigen::Map<Vector> MapVec;
         
-        std::default_random_engine random_generator;
+        //std::default_random_engine random_generator;
         
         const SQNpp<Scalar>&   param;  // Parameters to control the SQN algorithm
         Scalar rate;
@@ -47,8 +49,8 @@ namespace SQNpp {
             Hessian_t.resize(n,n);
             s.resize(n);
             y.resize(n);
-            Nabla_F = Vector::Zero(n);
-            Prev_Nabla_F = Vector::Zero(n);
+            Nabla_F.resize(n);
+            Prev_Nabla_F.resize(n);
             
         }
         
@@ -56,8 +58,17 @@ namespace SQNpp {
         
         inline int RandomGenerator(int N) const
         {
-            std::uniform_int_distribution<int> distribution(0,param.N - 1);
-            return distribution(random_generator);
+            //std::uniform_int_distribution<int> distribution(0,param.N - 1);
+            //return distribution(random_generator);
+            return rand() % N;
+        }
+        
+        inline void VectorGenerator(std::vector<Scalar> origin, Vector& Vec) const
+        {
+            int length = origin.size();
+            Vec.resize(length);
+            for (int i = 0; i <length ;i++)
+                Vec(i) = origin[i];
         }
         
         /////////////////////////////////////////////
@@ -89,12 +100,16 @@ namespace SQNpp {
         {
             int N = param.N;
             Scalar result = Scalar(0);
-            for (int i=0;i<N;i++)
+            for (int index=0;index<N;index++)
             {
-                MapVec x(param.input_data[i]);
-                MapVec z(param.output_data[i]);
-                result += f.Value(x,z,Omega);
+                Vector vec_x;
+                Vector vec_z;
+                VectorGenerator(param.input_data[index],vec_x);
+                vec_z.resize(1);
+                vec_z(0) = param.output_data[index];
+                result += f.Value(vec_x,vec_z,Omega);
             }
+            return result;
         }
         
         
@@ -108,13 +123,19 @@ namespace SQNpp {
             for (int i=0;i<b;i++)
             {
                 int index = RandomGenerator(N);
-                std::vector<Scalar> x = param.input_data[index];
-                MapVec vec_x(x);
-                Scalar z = param.output_data[index];
-                MapVec vec_z(z);
-                result += f.Gradient(x,z,Omega);
+                Vector vec_x;
+                Vector vec_z;
+                VectorGenerator(param.input_data[index],vec_x);
+                vec_z.resize(1);
+                vec_z(0) = param.output_data[index];
+                std::cout<<"a sample vector x is : "<<vec_x.transpose()<<std::endl;
+                std::cout<<"a sample output z is : "<<vec_z.transpose()<<std::endl;
+                std::cout<<"single value of a gradient : "<<(f.Gradient(vec_x,vec_z,Omega)).transpose();
+                std::cout<<"\n\n";
+                result += f.Gradient(vec_x,vec_z,Omega);
             }
             result = (Scalar(1) / Scalar(b)) * result;
+            std::cout<<"Stochastic Grad Result : " << result.transpose()<<std::endl;
             return result;
         }
         
@@ -130,10 +151,11 @@ namespace SQNpp {
             for (int i=0;i<b_H;i++)
             {
                 int index = RandomGenerator(N);
-                std::vector<Scalar> x = param.input_data[index];
-                Scalar z = param.output_data[index];
-                MapVec vec_x(x);
-                MapVec vec_z(z);
+                Vector vec_x;
+                Vector vec_z;
+                VectorGenerator(param.input_data[index],vec_x);
+                vec_z.resize(1);
+                vec_z(0) = param.output_data[index];
                 result += f.Hessian(vec_x,vec_z,Omega_bar);
             }
             result = (Scalar(1) / Scalar(b_H)) * result;
@@ -150,10 +172,11 @@ namespace SQNpp {
             for (int i=0;i<b_H;i++)
             {
                 int index = RandomGenerator(N);
-                std::vector<Scalar> x = param.input_data[index];
-                Scalar z = param.output_data[index];
-                MapVec vec_x(x);
-                MapVec vec_z(z);
+                Vector vec_x;
+                Vector vec_z;
+                VectorGenerator(param.input_data[index],vec_x);
+                vec_z.resize(1);
+                vec_z(0) = param.output_data[index];
                 result += f.Hessian_s(vec_x,vec_z,Omega_bar,S);
             }
             result = (Scalar(1) / Scalar(b_H)) * result;
@@ -173,11 +196,11 @@ namespace SQNpp {
             int n = param.n;                                                            //dimension
             reset(n);
             int t = -1;                                                                 //pointer
-            int k = 0;                                                                  //counter
+            int k = 1;                                                                  //counter
             int L = param.L;                                                            //window size
             Scalar epsilon = param.epsilon;                                             //tolerance
             omega_bar = Vector::Zero(n);                                                //set to zero
-            omega = Vector::Ones(n);                                                    //set to zero
+            omega = Omega;                                                    //set to zero
             int reportCounter = 0;
             
             Report.StartTiming();
@@ -187,6 +210,9 @@ namespace SQNpp {
                 Nabla_F = StochasticGrad(f,omega);                                      //batch gradient
                 if (reportCounter<10) Report.EndTiming(std::to_string(reportCounter)+"  Stochastic Grad"); //++
                 omega_bar += omega;                                                     //accmulate gradient direction
+                std::cout<<"\n\n";
+                std::cout<<"Omega Shows: "<<omega.transpose()<<std::endl;
+                std::cout<<"\n\n";
                 if (k <= 2*L)                                                           //two different updading methods
                     omega = omega - DirectionRate(k) * Nabla_F;
                 else{
@@ -211,7 +237,7 @@ namespace SQNpp {
                         History_y.push_back(y);                                         //record all the y
                         if (reportCounter<10) Report.StartTiming(); //++
                         UpdateHessian(Hessian_t,t);                                     //using new vector to update Hessian
-                        if (reportCounter<10) Report.EndTimeing(std::to_string(reportCounter)+"  Updating Hessian"); //++
+                        if (reportCounter<10) Report.EndTiming(std::to_string(reportCounter)+"  Updating Hessian"); //++
                     }
                     prev_omega_bar = omega_bar;
                     omega_bar = Vector::Zero(n);
@@ -232,7 +258,7 @@ namespace SQNpp {
                                                                                         //function, this is for backup plan.
                 reportCounter++;
             }
-            Report.EndTimeing("Main Loop ends"); //++
+            Report.EndTiming("Main Loop ends"); //++
             Report.WriteLog(k,n); //++
         }
         

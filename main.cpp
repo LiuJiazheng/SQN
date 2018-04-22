@@ -25,23 +25,23 @@ private:
         return  1.0 / (1.0 + exp(-xTw));
     }
 public:
-    double Value(Eigen::VectorXd& x, Eigen::VectorXd& z, VectorXd& Omega)
+    double Value(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
     {
         return z(0,0) * log(Entropy(x, Omega)) + (1.0 - z(0,0)) * log(1.0 - Entropy(x, Omega));
     }
     
-    VectorXd Gradient(Eigen::VectorXd& x, Eigen::VectorXd& z, VectorXd& Omega)
+    VectorXd Gradient(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
     {
         return (Entropy(x,Omega) - z(0,0)) * x;
     }
     
-    MatrixXd Hessian(Eigen::VectorXd& x, Eigen::VectorXd& z, VectorXd& Omega)
+    MatrixXd Hessian(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
     {
         long n = Omega.size();
         return MatrixXd::Zero(n, n);
     }
     
-    Eigen::VectorXd  Hessian_s(Eigen::VectorXd& x , Eigen::VectorXd& z, Eigen::VectorXd& Omega, Eigen::VectorXd& s)
+    Eigen::VectorXd  Hessian_s(Eigen::VectorXd x , Eigen::VectorXd z, Eigen::VectorXd Omega, Eigen::VectorXd s)
     {
         return Entropy(x, Omega) * (1 - Entropy(x, Omega)) * (x.transpose() * s) * x;
     }
@@ -54,7 +54,7 @@ int main(int argc, const char * argv[]) {
     //set up initial parameter
     SQNpp<double> param;
     SQNreport<double> report(param);
-    param.ReadData("../Data/letter_recognition/OutData.txt");
+    param.ReadData("/Users/LiuJiazheng/Documents/Optimazation/Data/letter_recognition/OutData.txt");
     SQNsolver<double> slover(param,report);
     
     //create function
