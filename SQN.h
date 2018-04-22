@@ -26,7 +26,6 @@ namespace SQNpp {
         //std::default_random_engine random_generator;
         
         const SQNpp<Scalar>&   param;  // Parameters to control the SQN algorithm
-        Scalar rate;
         Vector omega;        //direction by gradient descent
         Vector omega_bar ;   //direction for updadting matrix
         Vector prev_omega_bar ;
@@ -42,7 +41,6 @@ namespace SQNpp {
         inline void reset(int n)
         {
             const int m = param.m;
-            rate = Scalar(1);
             omega.resize(n);
             omega_bar.resize(n);
             prev_omega_bar.resize(n);
@@ -54,7 +52,7 @@ namespace SQNpp {
             
         }
         
-        inline Scalar DirectionRate(int k) const {return rate;}
+        inline Scalar DirectionRate(int k) const {return param.alpha / Scalar(k);}
         
         inline int RandomGenerator(int N) const
         {
@@ -109,7 +107,13 @@ namespace SQNpp {
                 vec_z(0) = param.output_data[index];
                 result += f.Value(vec_x,vec_z,Omega);
             }
-            return result;
+            return result / Scalar(N);
+        }
+        
+        inline Scalar Entropy(Eigen::VectorXd x, Eigen::VectorXd w)
+        {
+            double xTw = (x.transpose() * w)(0,0);
+            return  1.0 / (1.0 + exp(-1.0 * xTw));
         }
         
         
@@ -128,14 +132,17 @@ namespace SQNpp {
                 VectorGenerator(param.input_data[index],vec_x);
                 vec_z.resize(1);
                 vec_z(0) = param.output_data[index];
-                std::cout<<"a sample vector x is : "<<vec_x.transpose()<<std::endl;
-                std::cout<<"a sample output z is : "<<vec_z.transpose()<<std::endl;
-                std::cout<<"single value of a gradient : "<<(f.Gradient(vec_x,vec_z,Omega)).transpose();
-                std::cout<<"\n\n";
+                //std::cout<<"a sample vector x is : "<<vec_x.transpose()<<std::endl;
+                //std::cout<<"a sample output z is : "<<vec_z.transpose()<<std::endl;
+                //std::cout<<"now omega is : "<<Omega.transpose() <<std::endl;
+                //std::cout<<"a sample xTw is : " << vec_x.transpose() * Omega << std::endl;
+                //std::cout<<"a sample entropy is : " << Entropy(vec_x, Omega)<<std::endl;
+                //std::cout<<"single value of a gradient : "<<(f.Gradient(vec_x,vec_z,Omega)).transpose();
+                //std::cout<<"\n\n";
                 result += f.Gradient(vec_x,vec_z,Omega);
             }
             result = (Scalar(1) / Scalar(b)) * result;
-            std::cout<<"Stochastic Grad Result : " << result.transpose()<<std::endl;
+            //std::cout<<"Stochastic Grad Result : " << result.transpose()<<std::endl;
             return result;
         }
         
@@ -201,24 +208,19 @@ namespace SQNpp {
             Scalar epsilon = param.epsilon;                                             //tolerance
             omega_bar = Vector::Zero(n);                                                //set to zero
             omega = Omega;                                                    //set to zero
-            int reportCounter = 0;
-            
             Report.StartTiming();
             for (;;)
             {
-                if (reportCounter<10) Report.StartTiming(); //++
+                if (k<10) Report.StartTiming(); //++
                 Nabla_F = StochasticGrad(f,omega);                                      //batch gradient
-                if (reportCounter<10) Report.EndTiming(std::to_string(reportCounter)+"  Stochastic Grad"); //++
+                if (k<10) Report.EndTiming(std::to_string(k)+"  Stochastic Grad"); //++
                 omega_bar += omega;                                                     //accmulate gradient direction
-                std::cout<<"\n\n";
-                std::cout<<"Omega Shows: "<<omega.transpose()<<std::endl;
-                std::cout<<"\n\n";
                 if (k <= 2*L)                                                           //two different updading methods
-                    omega = omega - DirectionRate(k) * Nabla_F;
+                    omega = omega - 0.5 * DirectionRate(k) * Nabla_F;
                 else{
-                    if (reportCounter<10+2*L) Report.StartTiming();
+                    if (k<10+2*L) Report.StartTiming();
                     omega = omega - DirectionRate(k) * Hessian_t * Nabla_F;
-                    if (reportCounter<10+2*L) Report.EndTiming(std::to_string(reportCounter)+" Omega updating with Hessian");
+                    if (k<10+2*L) Report.EndTiming(std::to_string(k)+" Omega updating with Hessian");
 
                 }
                 if (k % L == 0)
@@ -228,16 +230,16 @@ namespace SQNpp {
                                                                                         //used for computing hessian
                     if (t > 0 )
                     {
-                        if (reportCounter<10) Report.StartTiming(); //++
+                        if (t<10) Report.StartTiming(); //++
                         
                         s = omega_bar - prev_omega_bar;                                 //s in standard L-BFGS method
                         y = Special_StochaticHessian_S(f,omega_bar,s);                  //y in standard L_BFGS method
-                        if (reportCounter<10) Report.EndTiming(std::to_string(reportCounter) + "  Updating Nabla_Square_F and y"); //++
+                        if (t<10) Report.EndTiming(std::to_string(t) + "  Updating Nabla_Square_F and y"); //++
                         History_s.push_back(s);                                         //record all the s
                         History_y.push_back(y);                                         //record all the y
-                        if (reportCounter<10) Report.StartTiming(); //++
+                        if (t<10) Report.StartTiming(); //++
                         UpdateHessian(Hessian_t,t);                                     //using new vector to update Hessian
-                        if (reportCounter<10) Report.EndTiming(std::to_string(reportCounter)+"  Updating Hessian"); //++
+                        if (t<10) Report.EndTiming(std::to_string(t)+"  Updating Hessian"); //++
                     }
                     prev_omega_bar = omega_bar;
                     omega_bar = Vector::Zero(n);
@@ -245,6 +247,14 @@ namespace SQNpp {
                 k++;                                                                    //increment of counter
                                                                                         //test whether getting convergence now
                 fx = F_Evaluation(f, omega);                                            //update new fx value
+                if (k % 10 ==0){
+                    std::cout<<"\n";
+                    std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
+                    std::cout<<"\n\n";
+                    std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
+                    std::cout<<"\n\n";
+                    std::cout<<"fx value : "<<fx << std::endl;
+                }
                 Scalar gnorm = (Nabla_F).norm();                                        //update new gradient norm
                 Report.RecordValue(fx);
                 Report.RecordGradient(gnorm);
@@ -256,10 +266,9 @@ namespace SQNpp {
                                                                                         //else keep the old gradient
                 //Prev_Nabla_F = Nabla_F;                                               //in order happen some wired gradient
                                                                                         //function, this is for backup plan.
-                reportCounter++;
             }
             Report.EndTiming("Main Loop ends"); //++
-            Report.WriteLog(k,n); //++
+            Report.WriteLog(k,n,t); //++
         }
         
         

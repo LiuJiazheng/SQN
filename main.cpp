@@ -16,18 +16,20 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using namespace SQNpp;
 
+const double EPSILON = 1e-8;
+
 class Function
 {
 private:
     inline double Entropy(Eigen::VectorXd x, Eigen::VectorXd w)
     {
         double xTw = (x.transpose() * w)(0,0);
-        return  1.0 / (1.0 + exp(-xTw));
+        return  1.0 / (1.0 + exp(-1.0 * xTw) + EPSILON) ;
     }
 public:
     double Value(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
     {
-        return z(0,0) * log(Entropy(x, Omega)) + (1.0 - z(0,0)) * log(1.0 - Entropy(x, Omega));
+        return  -1.0 * (z(0,0) * log(Entropy(x, Omega)) + (1.0 - z(0,0)) * log(1.0 - Entropy(x, Omega)));
     }
     
     VectorXd Gradient(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
@@ -43,7 +45,8 @@ public:
     
     Eigen::VectorXd  Hessian_s(Eigen::VectorXd x , Eigen::VectorXd z, Eigen::VectorXd Omega, Eigen::VectorXd s)
     {
-        return Entropy(x, Omega) * (1 - Entropy(x, Omega)) * (x.transpose() * s) * x;
+        double xTs = (x.transpose() * s)(0,0);
+        return Entropy(x, Omega) * (1 - Entropy(x, Omega)) * xTs * x;
     }
     
 };
@@ -66,7 +69,7 @@ int main(int argc, const char * argv[]) {
     //initial guess
     Eigen::VectorXd Omega(n);
     Omega.setOnes();
-    
+    Omega = Omega * 10.0;
     //a space for carry value fx
     double fx;
     

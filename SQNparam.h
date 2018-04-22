@@ -109,11 +109,11 @@ namespace SQNpp {
         ///
         SQNpp()
         {
-            M              = 10;
+            M              = 15;
             L              = 100;
             alpha          = Scalar(1);
-            b              = 3;    //50
-            b_H            = 5;    //300
+            b              = 50;    //50
+            b_H            = 300;    //300
             m              = 6;
             epsilon        = Scalar(1e-5);
             max_iterations = 0;

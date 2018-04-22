@@ -14,6 +14,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <stdint.h>
+#include <chrono>
 
 //  Windows
 #ifdef _WIN32
@@ -40,9 +41,9 @@ namespace SQNpp{
     {
     private:
         
-        std::vector<uint64_t> start;            //start counting time
+        std::vector<std::chrono::steady_clock::time_point> start;            //start counting time
         uint64_t end;              //end time
-        std::map<std::string,double> TimeSeries;        //different part time record
+        std::map<std::string,std::chrono::duration<long, std::milli>> TimeSeries;        //different part time record
         std::vector<Scalar> iteration_value;
         std::vector<Scalar> iteration_gradient;
         int ptr;
@@ -51,21 +52,25 @@ namespace SQNpp{
     public:
         SQNreport(const SQNpp<Scalar>&   param) : param(param) {ptr = 0; }
         
-        void StartTiming()  {start.push_back(rdtsc());ptr++;}
+        void StartTiming()  {
+            auto begin = std::chrono::high_resolution_clock::now();
+            start.push_back(begin);
+            ptr++;
+        }
         void EndTiming(std::string str)
         {
-            end = rdtsc();
+            auto end = std::chrono::high_resolution_clock::now();
             ptr--;
-            double DurationTime = (double)(end - start[ptr]) / CLOCKS_PER_SEC ;   //get the secs
-            TimeSeries.insert(std::pair<std::string,double>(str,DurationTime));
+            std::chrono::duration<long, std::milli> DurationTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start[ptr])  ;   //get the mi secs
+            TimeSeries.insert(std::pair<std::string,std::chrono::duration<long, std::milli>> (str,DurationTime));
         }
         void RecordValue(Scalar Value) {iteration_value.push_back(Value);}
         void RecordGradient(Scalar GradNorm) {iteration_gradient.push_back(GradNorm);}
         
-        void WriteLog(int k,int n)
+        void WriteLog(int k,int n,int t)
         {
             //write log
-            std::ofstream LogFile ("Log.txt");
+            std::ofstream LogFile ("/Users/LiuJiazheng/Documents/Optimazation/Data/Out/Log.txt");
             if (LogFile.is_open())
             {
                 LogFile << "Memeory Limit (iteration times per updation) : "<< param.M <<"\n";
@@ -75,21 +80,22 @@ namespace SQNpp{
                 LogFile << "Demension : " << n << "\n";
                 LogFile << "Iteration Times : " << k << "\n";
                 LogFile << "\n";
+                LogFile << "Hessian Updating Times : " << t << "\n";
                 LogFile << "<<<<<<<<<<<<<<<<<<<<Detials>>>>>>>>>>>>>>>>>>>>>" << "\n";
                 LogFile << "\n";
-                for (std::map<std::string,double>::iterator it = TimeSeries.begin();
+                for (auto it = TimeSeries.begin();
                      it != TimeSeries.end();
                      ++it )
                 {
                     LogFile << it->first << ":\n";
-                    LogFile << it->second  << "  "<< "secs \n";
+                    LogFile << (it->second).count()  << "  "<< "msecs \n";
                     LogFile << "\n";
                 }
                 LogFile.close();
             }
             
             //write value data
-            std::ofstream ValueData("Value.txt");
+            std::ofstream ValueData("/Users/LiuJiazheng/Documents/Optimazation/Data/Out/Value.txt");
             if (ValueData.is_open())
             {
                 for ( typename std::vector<Scalar>::iterator it = iteration_value.begin();
@@ -100,14 +106,14 @@ namespace SQNpp{
             }
             
             //write gradient data
-            std::ofstream GradData("Grad.txt");
+            std::ofstream GradData("/Users/LiuJiazheng/Documents/Optimazation/Data/Out/Grad.txt");
             if (ValueData.is_open())
             {
                 for ( typename std::vector<Scalar>::iterator it = iteration_gradient.begin();
                      it != iteration_gradient.end();
                      ++it)
                     GradData << *it <<"    ";
-                ValueData.close();
+                GradData.close();
             }
 
         }
