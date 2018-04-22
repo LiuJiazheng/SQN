@@ -117,7 +117,7 @@ namespace SQNpp {
             max_step       = Scalar(1e+20);
         }
         
-        void ReadData(std::string FileName) const
+        void ReadData(std::string FileName,char delimiter = ' ') const
         {
             //some read method
             std::string line;
@@ -126,7 +126,7 @@ namespace SQNpp {
             {
                 while ( std::getline (myfile,line) )
                 {
-                    std::vector<std::string> templine = split(line,' ');
+                    std::vector<std::string> templine = split(line,delimiter);
                     output_data.push_back(Scalar(std::stod(*templine.begin())));
                     std::vector<Scalar> tempIn;
                     for (auto it = templine.begin() + 1 ; it != templine.end(); ++it)
