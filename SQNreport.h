@@ -51,8 +51,8 @@ namespace SQNpp{
     public:
         SQNreport(const SQNpp<Scalar>&   param) : param(param) {ptr = 0; }
         
-        void StartTiming() const {start.push_back(rdtsc());ptr++;}
-        void EndTime(std::string str) const
+        void StartTiming()  {start.push_back(rdtsc());ptr++;}
+        void EndTiming(std::string str)
         {
             end = rdtsc();
             ptr--;
@@ -92,7 +92,7 @@ namespace SQNpp{
             std::ofstream ValueData("Value.txt");
             if (ValueData.is_open())
             {
-                for (typename std::vector<Scalar>::iteration it = iteration_value.begin();
+                for ( typename std::vector<Scalar>::iterator it = iteration_value.begin();
                      it != iteration_value.end();
                      ++it)
                     ValueData << *it <<"    ";
@@ -103,7 +103,7 @@ namespace SQNpp{
             std::ofstream GradData("Grad.txt");
             if (ValueData.is_open())
             {
-                for (typename std::vector<Scalar>::iteration it = iteration_gradient.begin();
+                for ( typename std::vector<Scalar>::iterator it = iteration_gradient.begin();
                      it != iteration_gradient.end();
                      ++it)
                     GradData << *it <<"    ";

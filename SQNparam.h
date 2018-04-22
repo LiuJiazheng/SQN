@@ -75,6 +75,10 @@ namespace SQNpp {
         /// where ||.|| denotes the Euclidean (L2) norm. The default value is
         /// \c 1e-5.
         ///
+        /// Variable Dimension n
+        int    n;
+        ///
+        ///
         Scalar epsilon;
         ///
         /// The maximum number of iterations.
@@ -117,7 +121,7 @@ namespace SQNpp {
             max_step       = Scalar(1e+20);
         }
         
-        void ReadData(std::string FileName,char delimiter = ' ') const
+        void ReadData(std::string FileName,char delimiter = ' ') 
         {
             //some read method
             std::string line;
@@ -136,8 +140,9 @@ namespace SQNpp {
                 myfile.close();
             }
             else
-                throw std::invalid_argument(" Input data does not exist!");
+                throw std::invalid_argument(" Input file does not exist!");
             N = output_data.size();
+            n = input_data[0].size();
         }
         
         ///
