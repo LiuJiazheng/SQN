@@ -71,10 +71,28 @@ namespace SQNpp {
         
         /////////////////////////////////////////////
         ////// tool function/////////////////////////
+        
+        //When iteration researches the maximal memory limit M, we need to erase some space who keeps the history of vector
+        //s and vector y
+        inline void Erase() const
+        {
+            int Size = History_s.size();
+            if (Size > param.M)
+            {
+                int length  = Size - param.M;
+                History_s.erase(History_s.begin(),History_s.begin()+length);
+                History_y.erase(History_y.begin(),History_y.begin()+length);
+            }
+        }
+        
+        
+        
         inline void UpdateHessian(Matrix& H_t, int t)
         {
             int M = param.M;
             int m_prime = std::min(M,t);
+            if (m_prime == M)
+                Erase();
             long size = H_t.rows();
             Matrix H(size,size);                                            //square Hessian matrix
             Matrix frac1 = History_s[t-1].transpose() * History_y[t-1];
