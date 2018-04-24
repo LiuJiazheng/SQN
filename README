@@ -1,0 +1,22 @@
+This is a header-only project implementing Stochastic Quansi-Newton Method(an enhanced version for Stochastic Gradient Descent Method).
+
+The main paper we refer is A Stochastic Quasi-Newton Method for Large-Scale Optimization[arXiv:1401.7020v2] by R.HByrd, S.L Hansen, Jorge Nocedal and Y.Singer.
+
+The modification we improve is attached, whose name is "Note".
+
+This program aims to solve an optimazation program, by using second-order Newton method: L-BFGS method to improve the speed of convergence and accuracy of result. The framework is under stochastic gradient method, hence the inputdata is very important in this method.
+
+input: 
+The program accepts two std::string variable, argv0 is the file path of the input data, argv1 indicates the path where the log file locates.
+
+output:
+A series of files which records all the information you want. Adtionally you can use class "SQNreport" to monitor the variable you are interested in. 
+
+A normal step to use the library is:
+1)initialize the class SQNpp, in which you can re-define the parameter to control the behavior of solver.
+2)initialize the class SQNreport. And you can use the member function "StartTiming/EndTiming" to record the time , member functions "StartRecordValue/StartRecordVector" to create the monitor scalar/vector variable, "AddRecordValue/AddRecordVector" to add an entry of record of related value.
+3)Read input data by calling SQNpp::ReadData(). Notice: The input data must not be empty!
+4)initialize the class SQNsolver,
+5)define the function you are interested
+6)calling SQNpp::SQNsolver::minimize(func&) to get the final result.
+
