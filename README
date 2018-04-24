@@ -20,3 +20,20 @@ A normal step to use the library is:
 5)define the function you are interested
 6)calling SQNpp::SQNsolver::minimize(func&) to get the final result.
 
+/////////////////////////////////////////////
+About the type of input data:
+right now, the program only accept regular file, which means the input must obey some rules.
+In detail, the input data should obey:
+
+(NOT IN FILE) result  feature
+IN FILE       1       2 4 6 8 9
+			  0       0 7 48 32 3
+			  1       86 22 91 44 0
+
+It follows the tradition in machine learning community. For a training dataset, the result(output data) should put at first, the followed by feature(input data) which are in same size.
+
+
+example:
+$ g++ --std=c++11 -g -Wall -I/link/to/Eigen -O2 main.cpp
+$ ./a.out </absolute/path/of/InputData> <path/you/want/to/write>
+
