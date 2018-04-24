@@ -14,7 +14,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <stdint.h>
-#include <chrono>
+#include <time.h>
 
 //  Windows
 #ifdef _WIN32
@@ -41,9 +41,9 @@ namespace SQNpp{
     {
     private:
         
-        std::vector<std::chrono::steady_clock::time_point> start;            //start counting time
-        uint64_t end;              //end time
-        std::map<std::string,std::chrono::duration<long, std::milli>> TimeSeries;        //different part time record
+        std::vector<clock_t>  start;            //start counting time
+        clock_t end;              //end time
+        std::map<std::string,double> TimeSeries;        //different part time record
         std::map<std::string, std::vector<Scalar>> RecordValue;
         std::map<std::string, std::vector<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>>> RecordVector;
         int ptr;
@@ -59,16 +59,16 @@ namespace SQNpp{
         }
         
         void StartTiming()  {
-            auto begin = std::chrono::high_resolution_clock::now();
+            clock_t begin = clock();
             start.push_back(begin);
             ptr++;
         }
         void EndTiming(std::string str)
         {
-            auto end = std::chrono::high_resolution_clock::now();
+            clock_t end = clock();
             ptr--;
-            std::chrono::duration<long, std::milli> DurationTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start[ptr])  ;   //get the mi secs
-            TimeSeries.insert(std::pair<std::string,std::chrono::duration<long, std::milli>> (str,DurationTime));
+            double duration = (double)(start[ptr]-end)/CLOCKS_PER_SEC;
+            TimeSeries.insert(std::pair<std::string,double> (str,duration));
         }
         
         void StartRecordValue(std::string VariableName)
@@ -118,7 +118,7 @@ namespace SQNpp{
                      ++it )
                 {
                     LogFile << it->first << ":\n";
-                    LogFile << (it->second).count()  << "  "<< "mili secs \n";
+                    LogFile << (it->second)  << "  "<< "micro secs \n";
                     LogFile << "\n";
                 }
                 LogFile.close();
