@@ -47,11 +47,11 @@ namespace SQNpp{
         std::map<std::string, std::vector<Scalar>> RecordValue;
         std::map<std::string, std::vector<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>>> RecordVector;
         int ptr;
-        const SQNpp<Scalar>&   param;
+        const SQNheader<Scalar>&   param;
         std::string FilePath;
         
     public:
-        SQNreport(const SQNpp<Scalar>&   Param, const std::string path)  : 
+        SQNreport(const SQNheader<Scalar>&   Param, const std::string path)  : 
         param(Param), FilePath(path)
         {
             

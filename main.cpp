@@ -55,7 +55,7 @@ public:
 
 int main(int argc, const char * argv[]) {
     //set up initial parameter
-    SQNpp<double> param;
+    SQNheader<double> param;
     if (argc >3)
         throw std::invalid_argument("Wrong number of parameter!");
     param.ReadData(argv[1]);

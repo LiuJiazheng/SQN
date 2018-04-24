@@ -25,7 +25,7 @@ namespace SQNpp {
         
         //std::default_random_engine random_generator;
         
-        const SQNpp<Scalar>&   param;  // Parameters to control the SQN algorithm
+        const SQNheader<Scalar>&   param;  // Parameters to control the SQN algorithm
         Vector omega;        //direction by gradient descent
         Vector omega_bar ;   //direction for updadting matrix
         Vector prev_omega_bar ;
@@ -209,7 +209,7 @@ namespace SQNpp {
         }
 
     public:
-        SQNsolver(const SQNpp<Scalar>& param, SQNreport<Scalar>& report) :
+        SQNsolver(const SQNheader<Scalar>& param, SQNreport<Scalar>& report) :
         param(param), Report(report)
         {
             param.check_param();

@@ -34,7 +34,7 @@ namespace SQNpp {
     /// Parameters to control the Stochastic Quasi-Newton algorithm.
     ///
     template <typename Scalar = double>
-    class SQNpp
+    class SQNheader
     {
         
     public:
@@ -107,7 +107,7 @@ namespace SQNpp {
         /// Constructor for SQN parameters.
         /// Default values for parameters will be set when the object is created.
         ///
-        SQNpp()
+        SQNheader()
         {
             M              = 15;
             L              = 100;
