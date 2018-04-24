@@ -56,8 +56,11 @@ public:
 int main(int argc, const char * argv[]) {
     //set up initial parameter
     SQNpp<double> param;
-    SQNreport<double> report(param);
-    param.ReadData("/Users/LiuJiazheng/Documents/Optimazation/Data/letter_recognition/OutData.txt");
+    if (argc >3)
+        throw std::invalid_argument("Wrong number of parameter!");
+    param.ReadData(argv[1]);
+    SQNreport<double> report(param,argv[2]);
+    //param.ReadData("/Users/LiuJiazheng/Documents/Optimazation/Data/letter_recognition/OutData.txt");
     SQNsolver<double> slover(param,report);
     
     //create function

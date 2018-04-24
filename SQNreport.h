@@ -48,9 +48,15 @@ namespace SQNpp{
         std::map<std::string, std::vector<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>>> RecordVector;
         int ptr;
         const SQNpp<Scalar>&   param;
+        std::string FilePath;
         
     public:
-        SQNreport(const SQNpp<Scalar>&   param) : param(param) {ptr = 0; }
+        SQNreport(const SQNpp<Scalar>&   Param, const std::string path)  : 
+        param(Param), FilePath(path)
+        {
+            
+            ptr = 0; 
+        }
         
         void StartTiming()  {
             auto begin = std::chrono::high_resolution_clock::now();
@@ -90,10 +96,10 @@ namespace SQNpp{
         
         
         
-        void WriteLog(int k,int n,int t, std::string FilePath)
+        void WriteLog(int k,int n,int t)
         {
             //write log
-            FilePath = "/Users/LiuJiazheng/Documents/Optimazation/Data/Out/";
+            //FilePath = "/Users/LiuJiazheng/Documents/Optimazation/Data/Out/";
             std::ofstream LogFile (FilePath + "Log.txt");
             if (LogFile.is_open())
             {
@@ -112,7 +118,7 @@ namespace SQNpp{
                      ++it )
                 {
                     LogFile << it->first << ":\n";
-                    LogFile << (it->second).count()  << "  "<< "msecs \n";
+                    LogFile << (it->second).count()  << "  "<< "mili secs \n";
                     LogFile << "\n";
                 }
                 LogFile.close();

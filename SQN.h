@@ -74,7 +74,7 @@ namespace SQNpp {
         
         //When iteration researches the maximal memory limit M, we need to erase some space who keeps the history of vector
         //s and vector y
-        inline void Erase() const
+        inline void Erase() 
         {
             int Size = History_s.size();
             if (Size > param.M)
@@ -295,7 +295,7 @@ namespace SQNpp {
                                                                                         //function, this is for backup plan.
             }
             Report.EndTiming("Main Loop ends"); //++
-            Report.WriteLog(k,n,t,"/Users/LiuJiazheng/Documents/Optimazation/Data/Out/"); //++
+            Report.WriteLog(k,n,t); //++
         }
         
         
