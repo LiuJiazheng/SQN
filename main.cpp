@@ -76,7 +76,7 @@ int main(int argc, const char * argv[]) {
     //a space for carry value fx
     double fx;
     
-    slover.minimizer(BinaryClassfication, Omega, fx);
+    slover.minimizer_enhanced(BinaryClassfication, Omega, fx);
     
     return 0;
 }

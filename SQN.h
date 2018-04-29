@@ -298,7 +298,113 @@ namespace SQNpp {
             Report.WriteLog(k,n,t); //++
         }
         
-        
+        template <typename Func>
+        inline void minimizer_enhanced(Func& f, Vector& Omega, Scalar& fx,Scalar eta = Scalar(0.7), Scalar tau = Scalar(1.5)){
+                                                                                        //initillization
+            int n = param.n;                                                            //dimension
+            reset(n);
+            int t = -1;                                                                 //pointer
+            int k = 1;                                                                  //counter
+            int j = 0;                                                                  //counter to help update window size
+            int L = param.L;                                                            //window size
+            int L_limit = param.L;                                                      //maximal size of L
+            Scalar epsilon = param.epsilon;                                             //tolerance
+            omega_bar = Vector::Zero(n);                                                //set to zero
+            omega = Omega;                                                    //set to zero
+            Scalar prev_fx = Scalar(0);                                         
+            Report.StartTiming();
+            //define the variable you want to trace
+            Report.StartRecordValue("g_norm");
+            Report.StartRecordValue("fx");
+            Report.StartRecordVector("Omega");
+            Report.StartRecordVector("Nabla_F");
+            Report.StartRecordValue("L");
+            for (;;)
+            {
+                if (k<10) Report.StartTiming(); //++
+                Nabla_F = StochasticGrad(f,omega);                                      //batch gradient
+                if (k<10) Report.EndTiming(std::to_string(k)+"  Stochastic Grad"); //++
+                omega_bar += omega;                                                     //accmulate gradient direction
+                if (k <= 2*L)                                                           //two different updading methods
+                    omega = omega - 0.5 * DirectionRate(k) * Nabla_F;
+                else{
+                    if (k<10+2*L) Report.StartTiming();
+                    omega = omega - DirectionRate(k) * Hessian_t * Nabla_F;
+                    if (k<10+2*L) Report.EndTiming(std::to_string(k)+" Omega updating with Hessian");
+
+                }
+                j++;
+                if (j == L)
+                {
+                    j = 0;
+                    t++;
+                    omega_bar = omega_bar / Scalar(L);                                  //get the very direction which is really
+                                                                                        //used for computing hessian
+                    if (t > 0 )
+                    {
+                        if (t<10) Report.StartTiming(); //++
+                        
+                        s = omega_bar - prev_omega_bar;                                 //s in standard L-BFGS method
+                        y = Special_StochaticHessian_S(f,omega_bar,s);                  //y in standard L_BFGS method
+                        if (t<10) Report.EndTiming(std::to_string(t) + "  Updating Nabla_Square_F and y"); //++
+                        History_s.push_back(s);                                         //record all the s
+                        History_y.push_back(y);                                         //record all the y
+                        if (t<10) Report.StartTiming(); //++
+                        UpdateHessian(Hessian_t,t);                                     //using new vector to update Hessian
+                        if (t<10) Report.EndTiming(std::to_string(t)+"  Updating Hessian"); //++
+                    }
+                    //update the size of window
+                    fx = F_Evaluation(f, omega_bar);                                            //update new fx value
+                    if (t>0)
+                    {
+                        Scalar gTp =  Nabla_F.dot(Nabla_F);    //should be less than zero
+                        if ((prev_fx - fx) > eta * gTp)
+                        {
+                            L = int(tau * Scalar(L) ) + 1;
+                            L = std::min(L,L_limit);
+                        }
+                        else
+                        {
+                            L = int(Scalar(L) / tau) - 1;
+                            L = std::max(L,1);
+                        }
+                    }
+                    prev_omega_bar = omega_bar;
+                    omega_bar = Vector::Zero(n);
+                    prev_fx = fx;
+                    Report.AddRecordValue("L",L);
+                }
+                k++;                                                                    //increment of counter
+                fx = F_Evaluation(f, omega);                                                               //test whether getting convergence now
+                if (k % 10 ==0){
+                    std::cout<<"\n";
+                    std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
+                    std::cout<<"\n\n";
+                    std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
+                    std::cout<<"\n\n";
+                    std::cout<<"fx value : "<<fx << std::endl;
+                }
+                Scalar gnorm = (Nabla_F).norm();                                        //update new gradient norm
+                
+                Report.AddRecordValue("g_norm",gnorm);                                      //for record
+                Report.AddRecordValue("fx",fx);
+                Report.AddRecordVector("Omega",omega);
+                Report.AddRecordVector("Nabla_F",Nabla_F);
+
+                
+                if (gnorm < epsilon) {                                                  //the gradient will not change
+                    //do some report
+                    Omega = prev_omega_bar;                                             //get the final optimal parameter Omega
+                    break;                                                              //exit the loop
+                }
+                                                                                        //else keep the old gradient
+                //Prev_Nabla_F = Nabla_F;                                               //in order happen some wired gradient
+                                                                                        //function, this is for backup plan.
+            }
+            Report.EndTiming("Main Loop ends"); //++
+            Report.WriteLog(k,n,t); //++
+        }
+
         };
     
 }

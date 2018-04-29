@@ -67,7 +67,7 @@ namespace SQNpp{
         {
             clock_t end = clock();
             ptr--;
-            double duration = (double)(start[ptr]-end)/CLOCKS_PER_SEC;
+            double duration = (double)(end - start[ptr])/CLOCKS_PER_SEC;
             TimeSeries.insert(std::pair<std::string,double> (str,duration));
         }
         
@@ -133,7 +133,7 @@ namespace SQNpp{
                 {
                     auto vector = it ->second;
                     for (auto itr = vector.begin(); itr != vector.end();++itr)
-                        Data<< *itr << "\n";
+                        Data<< "\n"<< *itr << "\n\n";
                     Data.close();
                 }
             }
@@ -147,7 +147,7 @@ namespace SQNpp{
                 {
                     auto vector = it ->second;
                     for (auto itr = vector.begin(); itr != vector.end();++itr)
-                        Data<< (*itr).transpose() << "\n";
+                        Data<< "\n" << (*itr).transpose() << "\n\n";
                     Data.close();
                 }
             }
