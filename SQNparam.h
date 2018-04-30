@@ -46,12 +46,6 @@ namespace SQNpp {
         /// output data
         std::vector<Scalar> output_data;
         ///
-        /// Memeory parameter M, controling all the maximal iteration times of
-        /// Hessian matrix updating. Noticing the matrix may be very huge,
-        /// it is strongly recommended that not set the M too large, normally
-        /// the default setting is 10
-        int    M;
-        ///
         /// direction updating time windows L. In SQN method, there is a paremeter
         /// to control the frequency of updating search direction, and that is L
         int    L;
@@ -110,7 +104,6 @@ namespace SQNpp {
         ///
         SQNheader()
         {
-            M              = 15;
             L              = 100;
             alpha          = Scalar(1);
             b              = 50;    //50
@@ -153,10 +146,6 @@ namespace SQNpp {
         ///
         inline void check_param() const
         {
-            if (M <= 0)
-                throw std::invalid_argument("'M' must be positive");
-            if (M > 100)
-                throw std::invalid_argument("'M' Too large! Cannot afford it");
             if (b <= 0)
                 throw std::invalid_argument("'b' must be positive");
             if (b_H <= 0)

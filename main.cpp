@@ -11,6 +11,7 @@
 #include <math.h>
 #include "SQN.h"
 #include "SQNparam.h"
+#include <cassert>
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -23,13 +24,24 @@ class Function
 private:
     inline double Entropy(Eigen::VectorXd x, Eigen::VectorXd w)
     {
-        double xTw = (x.transpose() * w)(0,0);
-        return  1.0 / (1.0 + exp(-1.0 * xTw) + EPSILON) ;
+        double xTw = x.dot(w);
+        assert(std::isnan(xTw)==false);
+        return  1.0 / (1.0 + exp(-1.0 * xTw) + 2 * EPSILON) + EPSILON;
     }
 public:
     double Value(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
     {
-        return  -1.0 * (z(0,0) * log(Entropy(x, Omega)) + (1.0 - z(0,0)) * log(1.0 - Entropy(x, Omega)));
+        double result = -1.0 * (z(0,0) * log(Entropy(x, Omega)) + (1.0 - z(0,0)) * log(1.0 - Entropy(x, Omega)));
+        if (std::isnan(result))
+        {
+            double xTw = x.dot(Omega);
+            std::cout<<" xTw : "<< xTw <<std::endl;
+            std::cout<<"Z : " << z <<std::endl;
+            std::cout<<"Entropy : " <<Entropy(x, Omega)<<std::endl;
+            std::cout<<" log : "<<log(Entropy(x, Omega))<<std::endl;
+            assert(std::isnan(result)==false);
+        }
+        return result;
     }
     
     VectorXd Gradient(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
@@ -74,12 +86,12 @@ int main(int argc, const char * argv[]) {
     Omega.setOnes();
     Omega = Omega * 10.0;
     param.alpha = 1.0;
-    param.L = 10;
-    param.m = 15;
+    param.L = 100;
+    param.m = 150;
     //a space for carry value fx
     double fx;
     
-    slover.minimizer(BinaryClassfication, Omega, fx);
+    slover.minimizer_enhanced(BinaryClassfication, Omega, fx);
     
     return 0;
 }

@@ -1,0 +1,121 @@
+Memeory Limit (iteration times per updation) : 15
+Window Size : 10
+Gradient Batch Size: 50
+Hessian Batch Size: 300
+Demension : 16
+Iteration Times : 61
+
+Hessian Updating Times : 25
+<<<<<<<<<<<<<<<<<<<<Detials>>>>>>>>>>>>>>>>>>>>>
+
+1  Stochastic Grad:
+0.000401  micro secs 
+
+1  Updating Hessian:
+2.00536  micro secs 
+
+1  Updating Nabla_Square_F and y:
+2.00485  micro secs 
+
+2  Stochastic Grad:
+0.099153  micro secs 
+
+2  Updating Hessian:
+3.13482  micro secs 
+
+2  Updating Nabla_Square_F and y:
+3.13435  micro secs 
+
+21 Omega updating with Hessian:
+2.20344  micro secs 
+
+22 Omega updating with Hessian:
+2.3088  micro secs 
+
+23 Omega updating with Hessian:
+2.40371  micro secs 
+
+24 Omega updating with Hessian:
+2.5007  micro secs 
+
+25 Omega updating with Hessian:
+2.62548  micro secs 
+
+26 Omega updating with Hessian:
+2.72161  micro secs 
+
+27 Omega updating with Hessian:
+2.81871  micro secs 
+
+28 Omega updating with Hessian:
+2.91087  micro secs 
+
+29 Omega updating with Hessian:
+3.00844  micro secs 
+
+3  Stochastic Grad:
+0.197511  micro secs 
+
+3  Updating Hessian:
+3.76592  micro secs 
+
+3  Updating Nabla_Square_F and y:
+3.76519  micro secs 
+
+4  Stochastic Grad:
+0.290587  micro secs 
+
+4  Updating Hessian:
+4.05878  micro secs 
+
+4  Updating Nabla_Square_F and y:
+4.05812  micro secs 
+
+5  Stochastic Grad:
+0.393764  micro secs 
+
+5  Updating Hessian:
+4.28618  micro secs 
+
+5  Updating Nabla_Square_F and y:
+4.28551  micro secs 
+
+6  Stochastic Grad:
+0.489782  micro secs 
+
+6  Updating Hessian:
+4.51805  micro secs 
+
+6  Updating Nabla_Square_F and y:
+4.51726  micro secs 
+
+7  Stochastic Grad:
+0.615771  micro secs 
+
+7  Updating Hessian:
+4.73701  micro secs 
+
+7  Updating Nabla_Square_F and y:
+4.7361  micro secs 
+
+8  Stochastic Grad:
+0.707047  micro secs 
+
+8  Updating Hessian:
+4.97389  micro secs 
+
+8  Updating Nabla_Square_F and y:
+4.97279  micro secs 
+
+9  Stochastic Grad:
+0.804178  micro secs 
+
+9  Updating Hessian:
+5.20534  micro secs 
+
+9  Updating Nabla_Square_F and y:
+5.20417  micro secs 
+
+Main Loop ends:
+8.97949  micro secs 
+

@@ -103,7 +103,7 @@ namespace SQNpp{
             std::ofstream LogFile (FilePath + "Log.txt");
             if (LogFile.is_open())
             {
-                LogFile << "Memeory Limit (iteration times per updation) : "<< param.M <<"\n";
+                LogFile << "Memeory Limit (iteration times per updation) : "<< param.m <<"\n";
                 LogFile << "Window Size : " << param.L << "\n";
                 LogFile << "Gradient Batch Size: " << param.b <<"\n";
                 LogFile << "Hessian Batch Size: " << param.b_H <<"\n";

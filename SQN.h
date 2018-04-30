@@ -116,8 +116,11 @@ namespace SQNpp {
                 vec_z.resize(1);
                 vec_z(0) = param.output_data[index];
                 result += f.Value(vec_x,vec_z,Omega);
+                
             }
-            return result / Scalar(N);
+            result = result / Scalar(N);
+            assert(std::isnan(result) == false);
+            return result;
         }
         
         inline Scalar Entropy(Eigen::VectorXd x, Eigen::VectorXd w)
@@ -153,6 +156,7 @@ namespace SQNpp {
             }
             result = (Scalar(1) / Scalar(b)) * result;
             //std::cout<<"Stochastic Grad Result : " << result.transpose()<<std::endl;
+            assert(std::isnan(result.norm()) == false);
             return result;
         }
         
@@ -197,6 +201,7 @@ namespace SQNpp {
                 result += f.Hessian_s(vec_x,vec_z,Omega_bar,S);
             }
             result = (Scalar(1) / Scalar(b_H)) * result;
+            assert(std::isnan(result.norm())==false);
             return result;
         }
 
@@ -260,17 +265,19 @@ namespace SQNpp {
                 k++;                                                                    //increment of counter
                                                                                         //test whether getting convergence now
                 fx = F_Evaluation(f, omega);                                            //update new fx value
-                if (k % 10 ==0){
-                    std::cout<<"\n";
-                    std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
-                    std::cout<<"\n\n";
-                    std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
-                    std::cout<<"\n\n";
-                    std::cout<<"fx value : "<<fx << std::endl;
-                }
                 Scalar gnorm = (Nabla_F).norm();                                        //update new gradient norm
-                
-            Report.AddRecordValue("g_norm",gnorm);                                      //for record
+                if (k % 2 ==0){
+                    //std::cout<<"\n";
+                    //std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
+                    //std::cout<<"\n\n";
+                    //std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
+                    std::cout<<"\n\n";
+                    std::cout<<"iterations : "<<k<< "  ;  "<<"fx value = "<<fx << std::endl;
+                    std::cout<<"iterations : "<<k<< "  ;  "<<"gradient norm = "<<gnorm << std::endl;
+
+                }
+
+                Report.AddRecordValue("g_norm",gnorm);                                      //for record
                 Report.AddRecordValue("fx",fx);
                 Report.AddRecordVector("Omega",omega);
                 Report.AddRecordVector("Nabla_F",Nabla_F);
@@ -364,16 +371,18 @@ namespace SQNpp {
                 }
                 k++;                                                                    //increment of counter
                 fx = F_Evaluation(f, omega);                                                               //test whether getting convergence now
-                if (k % 10 ==0){
-                    std::cout<<"\n";
-                    std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
-                    std::cout<<"\n\n";
-                    std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
-                    std::cout<<"\n\n";
-                    std::cout<<"fx value : "<<fx << std::endl;
-                }
                 Scalar gnorm = (Nabla_F).norm();                                        //update new gradient norm
-                
+                if (k % 2 ==0){
+                    //std::cout<<"\n";
+                    //std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
+                    //std::cout<<"\n\n";
+                    //std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
+                    std::cout<<"\n\n";
+                    std::cout<<"iterations : "<<k<< "  ;  "<<"fx value = "<<fx << std::endl;
+                    std::cout<<"iterations : "<<k<< "  ;  "<<"gradient norm = "<<gnorm << std::endl;
+                    
+                }
+
                 Report.AddRecordValue("g_norm",gnorm);                                      //for record
                 Report.AddRecordValue("fx",fx);
                 Report.AddRecordVector("Omega",omega);
