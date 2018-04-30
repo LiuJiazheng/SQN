@@ -22,7 +22,7 @@ namespace SQNpp {
     private:
         typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> Vector;
         typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> Matrix;
-        
+        typedef Eigen::Map<Vector> MapVec;
         //std::default_random_engine random_generator;
         
         const SQNheader<Scalar>&   param;  // Parameters to control the SQN algorithm
@@ -34,9 +34,10 @@ namespace SQNpp {
         Vector Nabla_F;       //Nabla_F
         Vector Prev_Nabla_F;   //used for testing whether convergence
         Matrix Hessian_t ;     // second-order optimal condition: Hessian Matrix
-        std::vector<Vector> History_s;
-        std::vector<Vector> History_y;
+        Matrix History_s;
+        Matrix History_y;
         SQNreport<Scalar>   Report;    //for generating report
+        int end;         //pointer
         
         inline void reset(int n)
         {
@@ -47,9 +48,11 @@ namespace SQNpp {
             Hessian_t.resize(n,n);
             s.resize(n);
             y.resize(n);
+            History_s.resize(n,m);
+            History_y.resize(n,m);
             Nabla_F.resize(n);
             Prev_Nabla_F.resize(n);
-            
+            end  = 0;
         }
         
         inline Scalar DirectionRate(int k) const {return param.alpha / Scalar(k);}
@@ -72,39 +75,28 @@ namespace SQNpp {
         /////////////////////////////////////////////
         ////// tool function/////////////////////////
         
-        //When iteration researches the maximal memory limit M, we need to erase some space who keeps the history of vector
-        //s and vector y
-        inline void Erase() 
+        inline void UpdateHessian(Matrix& H_t, int t,Vector s,Vector y)
         {
-            int Size = History_s.size();
-            if (Size > param.M)
-            {
-                int length  = Size - param.M;
-                History_s.erase(History_s.begin(),History_s.begin()+length);
-                History_y.erase(History_y.begin(),History_y.begin()+length);
-            }
-        }
-        
-        
-        
-        inline void UpdateHessian(Matrix& H_t, int t)
-        {
-            int M = param.M;
-            int m_prime = std::min(M,t);
-            if (m_prime == M)
-                Erase();
-            long size = H_t.rows();
-            Matrix H(size,size);                                            //square Hessian matrix
-            Matrix frac1 = History_s[t-1].transpose() * History_y[t-1];
-            Matrix frac2 = History_y[t-1].transpose() * History_y[t-1];
-            Matrix I(size,size);
+            const int n = s.size();
+            MapVec svec(&History_s(0,end),n);
+            MapVec yvec(&History_y(0,end),n);
+            svec.noalias() = s;
+            yvec.noalias() = y;
+            Matrix H(n,n);                                            //square Hessian matrix
+            Scalar frac1 = s.dot(y);
+            Scalar frac2 = y.dot(y);
+            Matrix I(n,n);
             I.setIdentity();
-            H = frac1(0,0) / frac2(0,0) * I;
-            for (int j = t - m_prime; j < t; j++  )
+            H = frac1 / frac2 * I;
+            int bound = std::min(param.m,t);
+            end = (end+1) % param.m;
+            int j = end;
+            for (int i = 0; i<bound; i++  )
             {
-                Vector s_j = History_s[j];
-                Vector y_j = History_y[j];
-                Scalar pho = 1/ ((y_j.transpose() * s_j)(0,0));
+                j = (j + param.m - 1) % param.m;
+                MapVec s_j(&History_s(0,j),n);
+                MapVec y_j(&History_y(0,j),n);
+                Scalar pho = 1/ y_j.dot(s_j);
                 H = (I - pho * s_j * y_j.transpose()) * H * (I - pho * y_j * s_j.transpose()) + pho * s_j * s_j.transpose();
             }
             H_t = H;
@@ -130,7 +122,7 @@ namespace SQNpp {
         
         inline Scalar Entropy(Eigen::VectorXd x, Eigen::VectorXd w)
         {
-            double xTw = (x.transpose() * w)(0,0);
+            double xTw = x.dot(w);
             return  1.0 / (1.0 + exp(-1.0 * xTw));
         }
         
@@ -258,10 +250,8 @@ namespace SQNpp {
                         s = omega_bar - prev_omega_bar;                                 //s in standard L-BFGS method
                         y = Special_StochaticHessian_S(f,omega_bar,s);                  //y in standard L_BFGS method
                         if (t<10) Report.EndTiming(std::to_string(t) + "  Updating Nabla_Square_F and y"); //++
-                        History_s.push_back(s);                                         //record all the s
-                        History_y.push_back(y);                                         //record all the y
                         if (t<10) Report.StartTiming(); //++
-                        UpdateHessian(Hessian_t,t);                                     //using new vector to update Hessian
+                        UpdateHessian(Hessian_t,t,s,y);                                     //using new vector to update Hessian
                         if (t<10) Report.EndTiming(std::to_string(t)+"  Updating Hessian"); //++
                     }
                     prev_omega_bar = omega_bar;
@@ -347,10 +337,8 @@ namespace SQNpp {
                         s = omega_bar - prev_omega_bar;                                 //s in standard L-BFGS method
                         y = Special_StochaticHessian_S(f,omega_bar,s);                  //y in standard L_BFGS method
                         if (t<10) Report.EndTiming(std::to_string(t) + "  Updating Nabla_Square_F and y"); //++
-                        History_s.push_back(s);                                         //record all the s
-                        History_y.push_back(y);                                         //record all the y
                         if (t<10) Report.StartTiming(); //++
-                        UpdateHessian(Hessian_t,t);                                     //using new vector to update Hessian
+                        UpdateHessian(Hessian_t,t,s,y);                                     //using new vector to update
                         if (t<10) Report.EndTiming(std::to_string(t)+"  Updating Hessian"); //++
                     }
                     //update the size of window

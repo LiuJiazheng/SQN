@@ -73,10 +73,13 @@ int main(int argc, const char * argv[]) {
     Eigen::VectorXd Omega(n);
     Omega.setOnes();
     Omega = Omega * 10.0;
+    param.alpha = 1.0;
+    param.L = 10;
+    param.m = 15;
     //a space for carry value fx
     double fx;
     
-    slover.minimizer_enhanced(BinaryClassfication, Omega, fx);
+    slover.minimizer(BinaryClassfication, Omega, fx);
     
     return 0;
 }
