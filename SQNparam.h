@@ -5,7 +5,6 @@
 //  Created by Jiazheng LIU on 4/18/18.
 //  Copyright © 2018 Jiazheng LIU. All rights reserved.
 //
-//
 
 #ifndef SQNparam_h
 #define SQNparam_h
