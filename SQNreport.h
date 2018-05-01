@@ -5,7 +5,7 @@
 //  Created by Jiazheng LIU on 4/20/18.
 //  Copyright © 2018 Jiazheng LIU. All rights reserved.
 //
-
+//
 #ifndef SQNreport_h
 #define SQNreport_h
 #include "SQNparam.h"
