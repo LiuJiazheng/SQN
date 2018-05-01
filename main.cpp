@@ -84,9 +84,9 @@ int main(int argc, const char * argv[]) {
     //initial guess
     Eigen::VectorXd Omega(n);
     Omega.setOnes();
-    Omega = Omega * 10.0;
-    param.alpha = 1.0;
-    param.L = 100;
+    Omega = Omega * 1.0;
+    param.alpha = 0.75;
+    param.L = 50;
     param.m = 150;
     //a space for carry value fx
     double fx;

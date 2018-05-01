@@ -110,7 +110,7 @@ namespace SQNpp {
             b_H            = 300;    //300
             m              = 6;
             epsilon        = Scalar(1e-5);
-            max_iterations = 0;
+            max_iterations = int(1e4);
             min_step       = Scalar(1e-20);
             max_step       = Scalar(1e+20);
         }

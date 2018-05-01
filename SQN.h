@@ -221,6 +221,7 @@ namespace SQNpp {
             int k = 1;                                                                  //counter
             int L = param.L;                                                            //window size
             Scalar epsilon = param.epsilon;                                             //tolerance
+            Scalar prev_gnorm = 0;                                                      //another exit method
             omega_bar = Vector::Zero(n);                                                //set to zero
             omega = Omega;                                                    //set to zero
             Report.StartTiming();
@@ -287,9 +288,15 @@ namespace SQNpp {
                     Omega = prev_omega_bar;                                             //get the final optimal parameter Omega
                     break;                                                              //exit the loop
                 }
-                                                                                        //else keep the old gradient
+                if (k > param.max_iterations)
+                    break;
+                
+                if (std::abs(prev_gnorm - gnorm)< epsilon)
+                    break;
+                //else keep the old gradient
                 //Prev_Nabla_F = Nabla_F;                                               //in order happen some wired gradient
                                                                                         //function, this is for backup plan.
+                prev_gnorm = gnorm;
             }
             Report.EndTiming("Main Loop ends"); //++
             Report.WriteLog(k,n,t); //++
@@ -305,6 +312,7 @@ namespace SQNpp {
             int j = 0;                                                                  //counter to help update window size
             int L = param.L;                                                            //window size
             int L_limit = param.L;                                                      //maximal size of L
+            Scalar prev_gnorm = 0;
             Scalar epsilon = param.epsilon;                                             //tolerance
             omega_bar = Vector::Zero(n);                                                //set to zero
             omega = Omega;                                                    //set to zero
@@ -322,12 +330,12 @@ namespace SQNpp {
                 Nabla_F = StochasticGrad(f,omega);                                      //batch gradient
                 if (k<10) Report.EndTiming(std::to_string(k)+"  Stochastic Grad"); //++
                 omega_bar += omega;                                                     //accmulate gradient direction
-                if (k <= 2*L)                                                           //two different updading methods
+                if (k <= 2*L_limit)                                                           //two different updading methods
                     omega = omega - 0.5 * DirectionRate(k) * Nabla_F;
                 else{
-                    if (k<10+2*L) Report.StartTiming();
+                    if (k<10+2*L_limit) Report.StartTiming();
                     omega = omega - DirectionRate(k) * Hessian_t * Nabla_F;
-                    if (k<10+2*L) Report.EndTiming(std::to_string(k)+" Omega updating with Hessian");
+                    if (k<10+2*L_limit) Report.EndTiming(std::to_string(k)+" Omega updating with Hessian");
 
                 }
                 j++;
@@ -380,6 +388,7 @@ namespace SQNpp {
                     std::cout<<"\n\n";
                     std::cout<<"iterations : "<<k<< "  ;  "<<"fx value = "<<fx << std::endl;
                     std::cout<<"iterations : "<<k<< "  ;  "<<"gradient norm = "<<gnorm << std::endl;
+                    std::cout<<"iterations : "<<k<< "  ;  "<<"window size = "<<L << std::endl;
                     
                 }
 
@@ -394,9 +403,16 @@ namespace SQNpp {
                     Omega = prev_omega_bar;                                             //get the final optimal parameter Omega
                     break;                                                              //exit the loop
                 }
+                if (k > param.max_iterations)
+                    break;
+                
+                if (std::abs(prev_gnorm - gnorm)< epsilon)
+                    break;
+
                                                                                         //else keep the old gradient
                 //Prev_Nabla_F = Nabla_F;                                               //in order happen some wired gradient
                                                                                         //function, this is for backup plan.
+                prev_gnorm = gnorm;
             }
             Report.EndTiming("Main Loop ends"); //++
             Report.WriteLog(k,n,t); //++
