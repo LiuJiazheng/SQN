@@ -84,14 +84,14 @@ int main(int argc, const char * argv[]) {
     //initial guess
     Eigen::VectorXd Omega(n);
     Omega.setOnes();
-    Omega = Omega * 1.0;
+    Omega = Omega * 10.0;
     param.alpha = 0.75;
-    param.L = 50;
-    param.m = 150;
+    param.L = 5;
+    param.m = 15;
     //a space for carry value fx
     double fx;
     
-    slover.minimizer_enhanced(BinaryClassfication, Omega, fx);
+    slover.minimizer(BinaryClassfication, Omega, fx);
     
     return 0;
 }

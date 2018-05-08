@@ -55,7 +55,7 @@ namespace SQNpp {
             end  = 0;
         }
         
-        inline Scalar DirectionRate(int k) const {return param.alpha / Scalar(k);}
+        inline Scalar DirectionRate(int k) const {return param.alpha / Scalar(k) + Scalar(0.1);}
         
         inline int RandomGenerator(int N) const
         {
@@ -128,6 +128,7 @@ namespace SQNpp {
             double xTw = x.dot(w);
             return  1.0 / (1.0 + exp(-1.0 * xTw));
         }
+        
         
         
         template <typename Func>
@@ -303,7 +304,7 @@ namespace SQNpp {
         }
         
         template <typename Func>
-        inline void minimizer_enhanced(Func& f, Vector& Omega, Scalar& fx,Scalar eta = Scalar(0.7), Scalar tau = Scalar(1.5)){
+        inline void minimizer_enhanced(Func& f, Vector& Omega, Scalar& fx,Scalar eta = Scalar(0.2), Scalar tau = Scalar(1.5)){
                                                                                         //initillization
             int n = param.n;                                                            //dimension
             reset(n);
@@ -312,10 +313,13 @@ namespace SQNpp {
             int j = 0;                                                                  //counter to help update window size
             int L = param.L;                                                            //window size
             int L_limit = param.L;                                                      //maximal size of L
+            int localcounter = 0;                                                       //local counter for exit, using a
+                                                                                        //function idicator
             Scalar prev_gnorm = 0;
             Scalar epsilon = param.epsilon;                                             //tolerance
             omega_bar = Vector::Zero(n);                                                //set to zero
-            omega = Omega;                                                    //set to zero
+            omega = Omega;                                                              //set to zero
+            Vector Drt;                                                                 //descent direction
             Scalar prev_fx = Scalar(0);                                         
             Report.StartTiming();
             //define the variable you want to trace
@@ -329,12 +333,17 @@ namespace SQNpp {
                 if (k<10) Report.StartTiming(); //++
                 Nabla_F = StochasticGrad(f,omega);                                      //batch gradient
                 if (k<10) Report.EndTiming(std::to_string(k)+"  Stochastic Grad"); //++
-                omega_bar += omega;                                                     //accmulate gradient direction
+                omega_bar += omega;                                                      //accmulate gradient direction
+                Scalar alpha_k = DirectionRate(k);
                 if (k <= 2*L_limit)                                                           //two different updading methods
-                    omega = omega - 0.5 * DirectionRate(k) * Nabla_F;
+                {
+                    Drt = Nabla_F;
+                    omega = omega -  alpha_k * Drt;
+                }
                 else{
                     if (k<10+2*L_limit) Report.StartTiming();
-                    omega = omega - DirectionRate(k) * Hessian_t * Nabla_F;
+                    Drt = Hessian_t * Nabla_F;
+                    omega = omega - alpha_k *  Drt;
                     if (k<10+2*L_limit) Report.EndTiming(std::to_string(k)+" Omega updating with Hessian");
 
                 }
@@ -360,8 +369,9 @@ namespace SQNpp {
                     fx = F_Evaluation(f, omega_bar);                                            //update new fx value
                     if (t>0)
                     {
-                        Scalar gTp =  Nabla_F.dot(Nabla_F);    //should be less than zero
-                        if ((prev_fx - fx) > eta * gTp)
+                        Vector Grad = StochasticGrad(f,prev_omega_bar);
+                        Scalar gTp =  Grad.dot(Grad);    //should be less than zero
+                        if ((prev_fx - fx) >=  eta * gTp)
                         {
                             L = int(tau * Scalar(L) ) + 1;
                             L = std::min(L,L_limit);
@@ -371,6 +381,12 @@ namespace SQNpp {
                             L = int(Scalar(L) / tau) - 1;
                             L = std::max(L,1);
                         }
+                        std::cout<<"iterations : "<<k<< "  ;  "<<"gTp = "<<gTp<<std::endl;
+                        std::cout<<"iterations : "<<k<< "  ;  "<<"fx descent = "<<(prev_fx - fx) << std::endl;
+                        if (prev_fx - fx < epsilon)
+                            localcounter ++;
+                        if (localcounter > 5)
+                            break;
                     }
                     prev_omega_bar = omega_bar;
                     omega_bar = Vector::Zero(n);
@@ -408,7 +424,7 @@ namespace SQNpp {
                 
                 if (std::abs(prev_gnorm - gnorm)< epsilon)
                     break;
-
+                
                                                                                         //else keep the old gradient
                 //Prev_Nabla_F = Nabla_F;                                               //in order happen some wired gradient
                                                                                         //function, this is for backup plan.
