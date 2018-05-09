@@ -12,6 +12,8 @@
 #include "SQN.h"
 #include "SQNparam.h"
 #include <cassert>
+#include <cstdlib>
+#include <string>
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -68,9 +70,10 @@ public:
 int main(int argc, const char * argv[]) {
     //set up initial parameter
     SQNheader<double> param;
-    if (argc >3)
+    if (argc >4)
         throw std::invalid_argument("Wrong number of parameter!");
     param.ReadData(argv[1]);
+    int L = std::stoi(argv[3]);
     SQNreport<double> report(param,argv[2]);
     //param.ReadData("/Users/LiuJiazheng/Documents/Optimazation/Data/letter_recognition/OutData.txt");
     SQNsolver<double> slover(param,report);
@@ -86,7 +89,7 @@ int main(int argc, const char * argv[]) {
     Omega.setOnes();
     Omega = Omega * 10.0;
     param.alpha = 0.75;
-    param.L = 5;
+    param.L = L;
     param.m = 15;
     //a space for carry value fx
     double fx;
