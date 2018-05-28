@@ -51,6 +51,9 @@ namespace SQNpp{
         std::string FilePath;
         
     public:
+        
+        std::map<std::string, std::vector<double>> Durations;
+        
         SQNreport(const SQNheader<Scalar>&   Param, const std::string path)  : 
         param(Param), FilePath(path)
         {
@@ -103,54 +106,66 @@ namespace SQNpp{
             std::ofstream LogFile (FilePath + "Log.txt");
             if (LogFile.is_open())
             {
-                LogFile << "Memeory Limit (iteration times per updation) : "<< param.m <<"\n";
-                LogFile << "Window Size : " << param.L << "\n";
-                LogFile << "Gradient Batch Size: " << param.b <<"\n";
-                LogFile << "Hessian Batch Size: " << param.b_H <<"\n";
+                LogFile << "Memeory Limit (iteration times per updation) M : "<< param.m <<"\n";
+                LogFile << "Window Size L : " << param.L << "\n";
+                LogFile << "Gradient Batch Size b: " << param.b <<"\n";
+                LogFile << "Hessian Batch Size b_H: " << param.b_H <<"\n";
+                LogFile << "Step Rate Alpha : " << param.alpha <<"\n";
                 LogFile << "Demension : " << n << "\n";
                 LogFile << "Iteration Times : " << k << "\n";
                 LogFile << "\n";
                 LogFile << "Hessian Updating Times : " << t << "\n";
                 LogFile << "<<<<<<<<<<<<<<<<<<<<Detials>>>>>>>>>>>>>>>>>>>>>" << "\n";
                 LogFile << "\n";
-                for (auto it = TimeSeries.begin();
-                     it != TimeSeries.end();
-                     ++it )
-                {
-                    LogFile << it->first << ":\n";
-                    LogFile << (it->second)  << "  "<< "micro secs \n";
-                    LogFile << "\n";
+//                for (auto it = TimeSeries.begin();
+//                     it != TimeSeries.end();
+//                     ++it )
+//                {
+//                    LogFile << it->first << ":\n";
+//                    LogFile << (it->second)  << "  "<< "micro secs \n";
+//                    LogFile << "\n";
+//                }
+                for (auto it = Durations.begin(); it != Durations.end(); it++ ){
+                    LogFile << it->first << " : ";
+                    double mean = 0;
+                    auto length = (it->second).size();
+                    for (int i =0; i < length;i++)
+                        mean += (it->second)[i];
+                    mean = mean / double(length);
+                    LogFile << mean << "\n";
                 }
+                
+                
                 LogFile.close();
             }
             
             //write value data
-            for (auto it = RecordValue.begin(); it != RecordValue.end(); ++it)
-            {
-                std::string FileName = it -> first;
-                std::ofstream Data(FilePath + FileName + ".txt");
-                if (Data.is_open())
-                {
-                    auto vector = it ->second;
-                    for (auto itr = vector.begin(); itr != vector.end();++itr)
-                        Data<< "\n"<< *itr << "\n\n";
-                    Data.close();
-                }
-            }
-            
-            //write vector data
-            for (auto it = RecordVector.begin(); it != RecordVector.end(); ++it)
-            {
-                std::string FileName = it -> first;
-                std::ofstream Data(FilePath + FileName + ".txt");
-                if (Data.is_open())
-                {
-                    auto vector = it ->second;
-                    for (auto itr = vector.begin(); itr != vector.end();++itr)
-                        Data<< "\n" << (*itr).transpose() << "\n\n";
-                    Data.close();
-                }
-            }
+//            for (auto it = RecordValue.begin(); it != RecordValue.end(); ++it)
+//            {
+//                std::string FileName = it -> first;
+//                std::ofstream Data(FilePath + FileName + ".txt");
+//                if (Data.is_open())
+//                {
+//                    auto vector = it ->second;
+//                    for (auto itr = vector.begin(); itr != vector.end();++itr)
+//                        Data<< "\n"<< *itr << "\n\n";
+//                    Data.close();
+//                }
+//            }
+//
+//            //write vector data
+//            for (auto it = RecordVector.begin(); it != RecordVector.end(); ++it)
+//            {
+//                std::string FileName = it -> first;
+//                std::ofstream Data(FilePath + FileName + ".txt");
+//                if (Data.is_open())
+//                {
+//                    auto vector = it ->second;
+//                    for (auto itr = vector.begin(); itr != vector.end();++itr)
+//                        Data<< "\n" << (*itr).transpose() << "\n\n";
+//                    Data.close();
+//                }
+//            }
 
         }
         

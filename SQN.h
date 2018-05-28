@@ -146,17 +146,9 @@ namespace SQNpp {
                 VectorGenerator(param.input_data[index],vec_x);
                 vec_z.resize(1);
                 vec_z(0) = param.output_data[index];
-                //std::cout<<"a sample vector x is : "<<vec_x.transpose()<<std::endl;
-                //std::cout<<"a sample output z is : "<<vec_z.transpose()<<std::endl;
-                //std::cout<<"now omega is : "<<Omega.transpose() <<std::endl;
-                //std::cout<<"a sample xTw is : " << vec_x.transpose() * Omega << std::endl;
-                //std::cout<<"a sample entropy is : " << Entropy(vec_x, Omega)<<std::endl;
-                //std::cout<<"single value of a gradient : "<<(f.Gradient(vec_x,vec_z,Omega)).transpose();
-                //std::cout<<"\n\n";
                 result += f.Gradient(vec_x,vec_z,Omega);
             }
             result = (Scalar(1) / Scalar(b)) * result;
-            //std::cout<<"Stochastic Grad Result : " << result.transpose()<<std::endl;
             assert(std::isnan(result.norm()) == false);
             return result;
         }
@@ -225,24 +217,30 @@ namespace SQNpp {
             Scalar prev_gnorm = 0;                                                      //another exit method
             omega_bar = Vector::Zero(n);                                                //set to zero
             omega = Omega;                                                    //set to zero
-            Report.StartTiming();
-            //define the variable you want to trace
-            Report.StartRecordValue("g_norm");
-            Report.StartRecordValue("fx");
-            Report.StartRecordVector("Omega");
-            Report.StartRecordVector("Nabla_F");
+            
+            clock_t startTime,endTime;
             for (;;)
             {
-                if (k<10) Report.StartTiming(); //++
+                //if (k<20) Report.StartTiming(); //++
+                if (k < 20) startTime = clock();
                 Nabla_F = StochasticGrad(f,omega);                                      //batch gradient
-                if (k<10) Report.EndTiming(std::to_string(k)+"  Stochastic Grad"); //++
+                //if (k<20) Report.EndTiming(std::to_string(k)+"  Stochastic Grad"); //++
+                if (k < 20) {
+                    endTime = clock();
+                    double time = (double)(endTime - startTime) / CLOCKS_PER_SEC;
+                    Report.Durations["Stochastic Grad"].push_back(time);
+                }
                 omega_bar += omega;                                                     //accmulate gradient direction
                 if (k <= 2*L)                                                           //two different updading methods
                     omega = omega - 0.5 * DirectionRate(k) * Nabla_F;
                 else{
-                    if (k<10+2*L) Report.StartTiming();
+                    if (k<20+2*L) startTime = clock();
                     omega = omega - DirectionRate(k) * Hessian_t * Nabla_F;
-                    if (k<10+2*L) Report.EndTiming(std::to_string(k)+" Omega updating with Hessian");
+                    if (k<20+2*L) {
+                        endTime = clock();
+                        double time = (double)(endTime - startTime) / CLOCKS_PER_SEC;
+                        Report.Durations["Stochastic Grad with Hessian"].push_back(time);
+                    }
 
                 }
                 if (k % L == 0)
@@ -252,14 +250,20 @@ namespace SQNpp {
                                                                                         //used for computing hessian
                     if (t > 0 )
                     {
-                        if (t<10) Report.StartTiming(); //++
-                        
+                        if (t<20) startTime = clock();
                         s = omega_bar - prev_omega_bar;                                 //s in standard L-BFGS method
                         y = Special_StochaticHessian_S(f,omega_bar,s);                  //y in standard L_BFGS method
-                        if (t<10) Report.EndTiming(std::to_string(t) + "  Updating Nabla_Square_F and y"); //++
-                        if (t<10) Report.StartTiming(); //++
-                        UpdateHessian(Hessian_t,t,s,y);                                     //using new vector to update Hessian
-                        if (t<10) Report.EndTiming(std::to_string(t)+"  Updating Hessian"); //++
+                        if (t<20) {
+                            endTime = clock();
+                            double time = (double)(endTime - startTime) / CLOCKS_PER_SEC;
+                            Report.Durations["Nabla_F"].push_back(time);
+                        }
+                        if (t<20) startTime = clock();                        UpdateHessian(Hessian_t,t,s,y);                                     //using new vector to update Hessian
+                        if (t<20) {
+                            endTime = clock();
+                            double time = (double)(endTime - startTime) / CLOCKS_PER_SEC;
+                            Report.Durations["Hessian Updadting"].push_back(time);
+                        }
                     }
                     prev_omega_bar = omega_bar;
                     omega_bar = Vector::Zero(n);
@@ -269,20 +273,11 @@ namespace SQNpp {
                 fx = F_Evaluation(f, omega);                                            //update new fx value
                 Scalar gnorm = (Nabla_F).norm();                                        //update new gradient norm
                 if (k % 2 ==0){
-                    //std::cout<<"\n";
-                    //std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
-                    //std::cout<<"\n\n";
-                    //std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
                     std::cout<<"\n\n";
                     std::cout<<"iterations : "<<k<< "  ;  "<<"fx value = "<<fx << std::endl;
                     std::cout<<"iterations : "<<k<< "  ;  "<<"gradient norm = "<<gnorm << std::endl;
 
                 }
-
-                Report.AddRecordValue("g_norm",gnorm);                                      //for record
-                Report.AddRecordValue("fx",fx);
-                Report.AddRecordVector("Omega",omega);
-                Report.AddRecordVector("Nabla_F",Nabla_F);
                 
                 if (gnorm < epsilon) {                                                  //the gradient will not change
                     //do some report
@@ -299,7 +294,6 @@ namespace SQNpp {
                                                                                         //function, this is for backup plan.
                 prev_gnorm = gnorm;
             }
-            Report.EndTiming("Main Loop ends"); //++
             Report.WriteLog(k,n,t); //++
         }
         
@@ -397,10 +391,6 @@ namespace SQNpp {
                 fx = F_Evaluation(f, omega);                                                               //test whether getting convergence now
                 Scalar gnorm = (Nabla_F).norm();                                        //update new gradient norm
                 if (k % 2 ==0){
-                    //std::cout<<"\n";
-                    //std::cout<<"Nabla Shows : " << Nabla_F.transpose() << std::endl;
-                    //std::cout<<"\n\n";
-                    //std::cout<<"Omega Shows : "<<omega.transpose()<<std::endl;
                     std::cout<<"\n\n";
                     std::cout<<"iterations : "<<k<< "  ;  "<<"fx value = "<<fx << std::endl;
                     std::cout<<"iterations : "<<k<< "  ;  "<<"gradient norm = "<<gnorm << std::endl;

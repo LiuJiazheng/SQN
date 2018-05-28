@@ -66,16 +66,16 @@ public:
 };
 
 
-
+// parameter overview:
+// (handle id) input_data , output_path , L , M , b , b_H, alpha
+//
 int main(int argc, const char * argv[]) {
     //set up initial parameter
     SQNheader<double> param;
-    if (argc >4)
+    if (argc  < 3)
         throw std::invalid_argument("Wrong number of parameter!");
     param.ReadData(argv[1]);
-    int L = std::stoi(argv[3]);
     SQNreport<double> report(param,argv[2]);
-    //param.ReadData("/Users/LiuJiazheng/Documents/Optimazation/Data/letter_recognition/OutData.txt");
     SQNsolver<double> slover(param,report);
     
     //create function
@@ -88,9 +88,16 @@ int main(int argc, const char * argv[]) {
     Eigen::VectorXd Omega(n);
     Omega.setOnes();
     Omega = Omega * 10.0;
-    param.alpha = 0.75;
-    param.L = L;
-    param.m = 15;
+    switch(argc )
+    {
+        case 8 : param.alpha = std::stod(argv[7]);
+        case 7 : param.b_H = std::stoi(argv[6]);
+        case 6 : param.b = std::stoi(argv[5]);
+        case 5 : param.m = std::stoi(argv[4]);
+        case 4 : param.L = std::stoi(argv[3]);
+        default: ;
+    }
+    
     //a space for carry value fx
     double fx;
     
