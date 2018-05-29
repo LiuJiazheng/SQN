@@ -9,7 +9,6 @@
 #ifndef SQNparam_h
 #define SQNparam_h
 
-#include <Eigen/Core>
 #include <stdexcept>  // std::invalid_argument
 #include <vector>
 #include <sstream>

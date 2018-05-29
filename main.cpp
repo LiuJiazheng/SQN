@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <string>
+#include "FuncTemplate.h"
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -21,7 +22,7 @@ using namespace SQNpp;
 
 const double EPSILON = 1e-8;
 
-class Function
+class BinaryFunction : public Function
 {
 private:
     inline double Entropy(Eigen::VectorXd x, Eigen::VectorXd w)
@@ -31,7 +32,7 @@ private:
         return  1.0 / (1.0 + exp(-1.0 * xTw) + 2 * EPSILON) + EPSILON;
     }
 public:
-    double Value(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
+    virtual double Value(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega) 
     {
         double result = -1.0 * (z(0,0) * log(Entropy(x, Omega)) + (1.0 - z(0,0)) * log(1.0 - Entropy(x, Omega)));
         if (std::isnan(result))
@@ -46,7 +47,7 @@ public:
         return result;
     }
     
-    VectorXd Gradient(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
+    virtual VectorXd Gradient(Eigen::VectorXd x, Eigen::VectorXd z, VectorXd Omega)
     {
         return (Entropy(x,Omega) - z(0,0)) * x;
     }
@@ -57,11 +58,13 @@ public:
         return MatrixXd::Zero(n, n);
     }
     
-    Eigen::VectorXd  Hessian_s(Eigen::VectorXd x , Eigen::VectorXd z, Eigen::VectorXd Omega, Eigen::VectorXd s)
+   virtual Eigen::VectorXd  Hessian_s(Eigen::VectorXd x , Eigen::VectorXd z, Eigen::VectorXd Omega, Eigen::VectorXd s)
     {
         double xTs = (x.transpose() * s)(0,0);
         return Entropy(x, Omega) * (1 - Entropy(x, Omega)) * xTs * x;
     }
+    
+    virtual ~BinaryFunction() {}
     
 };
 
@@ -79,7 +82,7 @@ int main(int argc, const char * argv[]) {
     SQNsolver<double> slover(param,report);
     
     //create function
-    Function BinaryClassfication;
+    BinaryFunction BinaryClassfication;
     
     //dimension
     const int n = param.n;
