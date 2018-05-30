@@ -15,6 +15,7 @@
 #include "SQNreport.h"
 #include <stdlib.h>     /* srand, rand */
 #include <iostream>
+#include <math.h>
 
 namespace SQNpp {
     template <typename Scalar>
@@ -197,7 +198,38 @@ namespace SQNpp {
             assert(std::isnan(result.norm())==false);
             return result;
         }
-
+        
+        inline void AdamMax(Vector & omega, Vector & Grad, int t){
+            static Scalar alpha = 0.002;
+            static Scalar beta1 = 0.9;
+            static Scalar beta2 = 0.999;
+            static Vector m_t = Vector::Zero(omega.size());
+            static Scalar u_t = 0;
+            m_t = beta1 * m_t + (1 - beta1) * Grad;
+            u_t = std::max(beta2*u_t,std::sqrt(Grad.norm()));
+            Scalar rate = (alpha / (1 - Scalar(std::pow(beta1,Scalar(t))))) / u_t;
+            omega = omega - rate * m_t;
+            
+        }
+        
+        inline void Adam(Vector & omega, Vector & Grad, int t){
+            static Scalar alpha = 0.001;
+            static Scalar beta1 = 0.7;
+            static Scalar beta2 = 0.8;
+            static Vector m_t = Vector::Zero(omega.size());
+            static Scalar v_t = 0;
+            static double epsilon = 10e-8;
+            m_t = beta1 * m_t + (1 - beta1) * Grad;
+            v_t = beta2*v_t + (1 - beta2) * Grad.dot(Grad);
+            Vector m_t_hat = (Scalar(1.0) / (1.0 - Scalar(std::pow(beta1,Scalar(t))))) * m_t;
+            Scalar v_t_hat = (Scalar(1.0) / (1.0 - Scalar(std::pow(beta2,Scalar(t))))) * v_t;
+            omega = omega - alpha / (std::sqrt(v_t_hat) + epsilon) * m_t_hat;
+        }
+        
+        inline void SGD(Vector & omega, Vector & Grad, int t){
+            omega = omega - (param.alpha / Scalar(t) + Scalar(0.001)) * Grad;
+        }
+        
     public:
         SQNsolver(const SQNheader<Scalar>& param, SQNreport<Scalar>& report) :
         param(param), Report(report)
@@ -231,18 +263,14 @@ namespace SQNpp {
                     Report.Durations["Stochastic Grad"].push_back(time);
                 }
                 omega_bar += omega;                                                     //accmulate gradient direction
+                Vector Grad;
                 if (k <= 2*L)                                                           //two different updading methods
-                    omega = omega - 0.5 * DirectionRate(k) * Nabla_F;
-                else{
-                    if (k<20+2*L) startTime = clock();
-                    omega = omega - DirectionRate(k) * Hessian_t * Nabla_F;
-                    if (k<20+2*L) {
-                        endTime = clock();
-                        double time = (double)(endTime - startTime) / CLOCKS_PER_SEC;
-                        Report.Durations["Stochastic Grad with Hessian"].push_back(time);
-                    }
-
-                }
+                    Grad =  Nabla_F;
+                else
+                    Grad = Hessian_t * Nabla_F;
+                
+                AdamMax(omega, Grad, k);
+                
                 if (k % L == 0)
                 {
                     t++;
