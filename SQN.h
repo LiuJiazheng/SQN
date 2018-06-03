@@ -307,6 +307,9 @@ namespace SQNpp {
 
                 }
                 
+                if (fx < 1e-1 && Report.FirstHittingTime == -1)
+                    Report.FirstHittingTime = k;
+                
                 if (gnorm < epsilon) {                                                  //the gradient will not change
                     //do some report
                     Omega = prev_omega_bar;                                             //get the final optimal parameter Omega

@@ -52,6 +52,8 @@ namespace SQNpp{
         
     public:
         
+        int FirstHittingTime = -1;
+        
         std::map<std::string, std::vector<double>> Durations;
         
         SQNreport(const SQNheader<Scalar>&   Param, const std::string path)  : 
@@ -113,7 +115,7 @@ namespace SQNpp{
                 LogFile << "Step Rate Alpha : " << param.alpha <<"\n";
                 LogFile << "Demension : " << n << "\n";
                 LogFile << "Iteration Times : " << k << "\n";
-                LogFile << "\n";
+                LogFile << "First Hitting Time : "<<FirstHittingTime << "\n";
                 LogFile << "Hessian Updating Times : " << t << "\n";
                 LogFile << "<<<<<<<<<<<<<<<<<<<<Detials>>>>>>>>>>>>>>>>>>>>>" << "\n";
                 LogFile << "\n";

@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <Eigen/Core>
-#include <math.h>
+
 #include "SQN.h"
 #include "SQNparam.h"
 #include <cassert>
